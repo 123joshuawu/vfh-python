@@ -520,48 +520,48 @@ class VFH:
 """ TO BE IMPLEMENTED """
 
 
-class Sensor:
-    """ "Abstract Class" for sensors (lidar, sonar...) to implement
-    """
+# class Sensor:
+#     """ "Abstract Class" for sensors (lidar, sonar...) to implement
+#     """
 
-    def get_readings(self):
-        """ Should return dictionary of polar coordinates of readings
-        """
-        pass
+#     def get_readings(self):
+#         """ Should return dictionary of polar coordinates of readings
+#         """
+#         pass
 
 
-class Bot:
-    """ Unsure of what/how to put/use this class
-        May move most of localization funcationality to new class
-    """
+# class Bot:
+#     """ Unsure of what/how to put/use this class
+#         May move most of localization funcationality to new class
+#     """
 
-    def __init__(self, cell_resolution):
-        self.cell_resolution = cell_resolution
+#     def __init__(self, cell_resolution):
+#         self.cell_resolution = cell_resolution
 
-    def add_sensor(self, sensor):
-        self.sensors.append(sensor)
+#     def add_sensor(self, sensor):
+#         self.sensors.append(sensor)
 
-    def update_hg(self):
-        readings = list(map(Sensor.get_readings, self.sensors))
-        localized_readings = localize_readings(readings)
-        for r in localized_readings:
-            self.hg.add_certainty(r[0], r[1])
+#     def update_hg(self):
+#         readings = list(map(Sensor.get_readings, self.sensors))
+#         localized_readings = localize_readings(readings)
+#         for r in localized_readings:
+#             self.hg.add_certainty(r[0], r[1])
 
-    def localize(self, polar):
-        angle, distance = polar
-        local_x = int(
-            (distance * math.cos(math.radians(angle))) / self.cell_resolution)
-        local_y = int(
-            (distance * math.sin(math.radians(angle))) / self.cell_resolution)
-        return (local_x, local_y)
+#     def localize(self, polar):
+#         angle, distance = polar
+#         local_x = int(
+#             (distance * math.cos(math.radians(angle))) / self.cell_resolution)
+#         local_y = int(
+#             (distance * math.sin(math.radians(angle))) / self.cell_resolution)
+#         return (local_x, local_y)
 
-    def localize_readings(self, readings):
-        localized_readings = list(map(self.localize, readings))
-        return localized_readings
+#     def localize_readings(self, readings):
+#         localized_readings = list(map(self.localize, readings))
+#         return localized_readings
 
-    def update_global_location(glob_loc):
-        self.global_location = glob_loc
-        self.localized_location = self.localize_global_location(glob_loc)
+#     def update_global_location(glob_loc):
+#         self.global_location = glob_loc
+#         self.localized_location = self.localize_global_location(glob_loc)
 
-    def localize_global_location(glob_loc):
-        pass
+#     def localize_global_location(glob_loc):
+#         pass
