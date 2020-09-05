@@ -1,4 +1,4 @@
-from vfh_proto import *
+from vfh_plus import *
 import sys
 import math
 import csv
@@ -8,12 +8,11 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-
 # Need to
 # - change movement of robot on actual map to decimal accuracy
 
 
-""" Testing for VFH+ algorithm using map.txt grid from vfh-python""" 
+""" Testing for VFH+ algorithm using map.txt grid from vfh-python"""
 # USER-DEFINED VARIABLES--------
 
 # Start/end location for robot in histogram grid
@@ -35,8 +34,8 @@ MAX_STEPS = 100
 # Robot velocity (unit square/interval)
 v_r = 1
 
-#CONSTANTS USED IN CALCS-----------------------------
-#Feel free to change these to see what happens
+# CONSTANTS USED IN CALCS-----------------------------
+# Feel free to change these to see what happens
 
 # Positive constants for calculating cell magnitude
 # Should satisty mhp_a - mhp_b * sqrt(2) * (w_s - 1)/2 = 0
@@ -60,8 +59,7 @@ gbd_smax = 18
 gbd_a = 5
 gbd_b = 2
 gbd_c = 2
-#---------------
-
+# ---------------
 
 
 def from_map(map_fname):
@@ -76,10 +74,12 @@ def from_map(map_fname):
 
     return lines
 
+
 current_loc = start
 current_cell = start
 target_angle = None
-current_angle = wrap_angle(-1 * math.degrees(math.atan2(end[1] - start[1], end[0] - start[0])))
+current_angle = wrap_angle(-1 *
+                           math.degrees(math.atan2(end[1] - start[1], end[0] - start[0])))
 previous_angle = current_angle
 
 hg = HistogramGrid(hg_dim[0], hg_dim[1])
@@ -112,6 +112,7 @@ pts = ax.scatter([start[0]], [start[1]])
 #     target_angle = wrap_angle(-1 * math.degrees(math.atan2(end[1] - current[1], end[0] - current[0])))
 #     best_angle = VFH.get_best_direction(ph, target_angle, current_angle, previous_angle, gbd_t_low, gbd_t_high, gbd_smax, gbd_a, gbd_b, gbd_c)
 
+
 def update(frame):
     global index, current_cell, current_loc, current_angle, target_angle, previous_angle, steps, v_r
 
@@ -128,15 +129,19 @@ def update(frame):
         print "STEP", index
         #hg.print_hg(list(map(lambda s: s[1], steps)), start, end, current)
 
-        ph = VFH.map_active_hg_to_ph(hg, PolarHistogram(nsectors), current_cell, w_s, mhp_a, mhp_b, mhp_l)
+        ph = VFH.map_active_hg_to_ph(hg, PolarHistogram(
+            nsectors), current_cell, w_s, mhp_a, mhp_b, mhp_l)
         # avg = np.median(ph.polar_histogram)#sum(ph.polar_histogram) / len(ph.polar_histogram)
 
-        target_angle = wrap_angle(math.degrees(math.atan2(end[1] - current_loc[1], end[0] - current_loc[0])))
-        best_angle = VFH.get_best_direction(ph, target_angle, current_angle, previous_angle, gbd_t_low, gbd_t_high, gbd_smax, gbd_a, gbd_b, gbd_c)
+        target_angle = wrap_angle(math.degrees(math.atan2(
+            end[1] - current_loc[1], end[0] - current_loc[0])))
+        best_angle = VFH.get_best_direction(
+            ph, target_angle, current_angle, previous_angle, gbd_t_low, gbd_t_high, gbd_smax, gbd_a, gbd_b, gbd_c)
         print "current_cell (%d, %d)" % (current_cell[0], current_cell[1])
         print "current_loc (%f, %f)" % (current_loc[0], current_loc[1])
         print "best_angle", best_angle
-        steps.append((index, current_cell, current_loc, target_angle, wrap_angle(best_angle)))
+        steps.append((index, current_cell, current_loc,
+                      target_angle, wrap_angle(best_angle)))
 
         # check if robot needs to slow down
         end_dis = math.hypot(end[1] - current_loc[1], end[0] - current_loc[0])
@@ -165,7 +170,7 @@ def update(frame):
         pts.set_offsets(ofs)
     # except Exception:
     #     ani.event_source.stop()
-        
+
     # finally:
     #     for s in steps:
     #             print "{0:2}. ({1:2}, {2:<2}) -- ({3:2.1f}, {4:<2.1f}) target_angle: {5:5.1f}   best_angle: {6:5.1f} ".format(s[0], s[1][0], s[1][1], s[2][0], s[2][1], s[3], s[4])
@@ -176,7 +181,7 @@ def update(frame):
 
         #hg.print_hg(list(map(lambda s: s[1], steps)), start, end, current)
 
-#         #if raw_input(): break 
+#         #if raw_input(): break
 # finally:
 #     i = 0
 #     for s in steps:
@@ -184,6 +189,7 @@ def update(frame):
 #         if i < len(steps) - 1 and steps[i + 1][4] - s[4] > gbd_t_high and steps[i + 1][5] > s[5]:
 #             print "WOWWWW", steps[i + 1][4] - s[4]
 #         i += 1
+
 
 #     hg.print_hg(list(map(lambda s: s[1], steps)), start, end, current)
 try:
@@ -193,8 +199,6 @@ except Exception:
     ani.event_source.stop()
 
 plt.show()
-
-
 
 
 # try:
@@ -212,7 +216,7 @@ plt.show()
 #         print "best_angle", best_angle
 #         steps.append((index, current, target_angle, wrap_angle(best_angle), avg, ph.avg_obs_dis, ph.polar_histogram))
 
-#         # Compute next adjacent cell robot will be in 
+#         # Compute next adjacent cell robot will be in
 #         next_angle = math.floor(wrap_angle(best_angle + 22.5) / 45) * 45
 #         print "current", current
 #         print "next_angle", next_angle
@@ -228,13 +232,6 @@ plt.show()
 #         print "-" * 16
 
 #     print "COMPLETE"
-
-
-
-
-
-
-
 
 
 # vcp = (int(sys.argv[2]), int(sys.argv[3]))
