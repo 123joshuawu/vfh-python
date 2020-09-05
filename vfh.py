@@ -51,7 +51,7 @@ class HistogramGrid:
     def add_certainty(self, x, y):
         """ Increments cell certainty by one, capped at MAX_CERTAINTY.
             Maybe change increment value to parameter in future iterations """
-        if self.grid[y][x] < MAX_CERTAINTY:
+        if self.grid[y][x] < self.MAX_CERTAINTY:
             self.grid[y][x] += 1
 
     def print_hg(self, robot_locations, start, end, current):

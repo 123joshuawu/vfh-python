@@ -23,6 +23,7 @@ from operator import itemgetter
 
 """
 
+
 def bound(index, l):
     """ Helper function to get valid index of list
     """
@@ -52,7 +53,7 @@ class HistogramGrid:
         return bound(index, self.grid[0])
 
     def get_valid_y(self, index):
-        return bound(index, self.grid) 
+        return bound(index, self.grid)
 
     def get_certainty(self, x, y):
         return self.grid[len(self.grid) - y - 1][x]
@@ -60,7 +61,7 @@ class HistogramGrid:
     def add_certainty(self, x, y):
         """ Increments cell certainty by one, capped at MAX_CERTAINTY.
             Maybe change increment value to parameter in future iterations """
-        if self.get_certainty(x, y) < MAX_CERTAINTY:
+        if self.get_certainty(x, y) < self.MAX_CERTAINTY:
             self.grid[len(self.grid) - y - 1][x] += 1
 
     # def print_hg(self, robot_locations, start, end, current):
@@ -96,7 +97,7 @@ class PolarHistogram:
     BINARY_PH = 2
 
     def __init__(self, nsectors):
-        if 360 % nsectors != 0: 
+        if 360 % nsectors != 0:
             raise ValueError("nsectors should be a factor of 360")
 
         self.nsectors = nsectors
@@ -113,11 +114,11 @@ class PolarHistogram:
         smoothed_histogram = [0] * self.nsectors
 
         for k_i in xrange(self.nsectors):
-            smoothed_histogram[k_i] = sum([(l - abs(k_i-l_i)) * self.get(l_i) for l_i in range(k_i-l+1, k_i+l)]) / (2*l+1)
+            smoothed_histogram[k_i] = sum(
+                [(l - abs(k_i-l_i)) * self.get(l_i) for l_i in range(k_i-l+1, k_i+l)]) / (2*l+1)
 
         self.polar_histogram = smoothed_histogram
         self.state = PolarHistogram.SMOOTHED_PH
-
 
     def binary_polar_histogram(self, t_low, t_high):
         """ Generates binary polar histogram based on high and low thresholds """
@@ -132,7 +133,8 @@ class PolarHistogram:
             else:
                 binary_ph[i] = binary_ph[i - 1] if i != 0 else None
         # Catch for special case if first value falls between high and low thresholds
-        if binary_ph[0] is None: binary_ph[0] = binary_ph[-1]
+        if binary_ph[0] is None:
+            binary_ph[0] = binary_ph[-1]
 
         self.polar_histogram = binary_ph
         self.state = PolarHistogram.BINARY_PH
@@ -142,13 +144,15 @@ class PolarHistogram:
         string = ""
         for tup in enumerate(self.polar_histogram):
             if tup[1] != 0:
-                string += "{:<3} {}\n".format(tup[0] * self.sector_angle, tup[1])
+                string += "{:<3} {}\n".format(tup[0]
+                                              * self.sector_angle, tup[1])
         return string
 
 
 def small_angle_diff(a1, a2):
     """ Helper function for getting smallest angle difference between two angles """
     return abs((a1 - a2 + 180) % 360 - 180)
+
 
 def wrap_angle(angle):
     """ Helper function to keep angle under 360 """
@@ -158,6 +162,7 @@ def wrap_angle(angle):
         return angle - 360
     else:
         return angle
+
 
 def wrap(index, l):
     """ Helper function to wrap list index """
@@ -191,13 +196,13 @@ class VFH:
         robot_x, robot_y = vcp
         window_radius = (w_s - 1)/2
         obs_dis = []
-        
+
         if a - b * math.sqrt(2) * window_radius != 0:  # VFH
-        # if a - b * (window_radius * math.sqrt(2)) ** 2 != 1: # VFH+
+            # if a - b * (window_radius * math.sqrt(2)) ** 2 != 1: # VFH+
             print "Not optimum values for positive a b constants. a - b * sqrt(2) * window_radius should be 0."
             a = b * math.sqrt(2) * window_radius  # VFH
             # print "Not optimum values for positive a b constants. a - b * window_radius ** 2 should be 1."
-            # a = b * (window_radius * math.sqrt(2)) ** 2 + 1 # VFH+ 
+            # a = b * (window_radius * math.sqrt(2)) ** 2 + 1 # VFH+
             print "Setting a to %d" % a
 
         # print "Active Region -- X marks the robot"
@@ -208,15 +213,15 @@ class VFH:
         #     ar_string += "\n"
         # print ar_string[:-1]
 
-
         # Loop through all cells in active region
         for x in xrange(robot_x - window_radius, robot_x + window_radius + 1):
             for y in xrange(robot_y - window_radius, robot_y + window_radius + 1):
 
                 dy = y - robot_y
                 dx = x - robot_x
-                layer = float(max(abs(dy), abs(dx))) # The cell layer in the active region of the current cell
-                                                # E.g. if the vcp is (0, 0), then (1, 1) would be layer 1, (2, 0) layer 2....
+                # The cell layer in the active region of the current cell
+                layer = float(max(abs(dy), abs(dx)))
+                # E.g. if the vcp is (0, 0), then (1, 1) would be layer 1, (2, 0) layer 2....
                 #print "(%d, %d) layer: %d" % (x, y, layer)
 
                 # Just a quick effort to reduce compute time
@@ -225,47 +230,55 @@ class VFH:
                 if not (layer == 1 and hg.out_of_bounds(x, y)) and (hg.out_of_bounds(x, y) or hg.get_certainty(x, y) == 0 or (x, y) == vcp):
                     #print "    OU?T early"
                     continue
-                
+
                 # Angle between cell and vcp. 0 is E. wrap_angle changes range to [0, 359]
                 cell_angle = wrap_angle(math.degrees(math.atan2(dy, dx)))
-                cell_distance = math.hypot(dx, dy) # Distance between cell and vcp
-                cell_certainty = hg.get_certainty(x, y) if not hg.out_of_bounds(x, y) else HistogramGrid.MAX_CERTAINTY
+                # Distance between cell and vcp
+                cell_distance = math.hypot(dx, dy)
+                cell_certainty = hg.get_certainty(x, y) if not hg.out_of_bounds(
+                    x, y) else HistogramGrid.MAX_CERTAINTY
                 # MAX_CERTAINTY for edge of histogramgrid
                 obs_dis.append(cell_distance)
 
                 # Grabbed from paper
-                cell_magnitude = (cell_certainty ** 2) * (a - b * cell_distance) if not hg.out_of_bounds(x, y) else HistogramGrid.MAX_CERTAINTY
+                cell_magnitude = (cell_certainty ** 2) * (
+                    a - b * cell_distance) if not hg.out_of_bounds(x, y) else HistogramGrid.MAX_CERTAINTY
                 #cell_magnitude = (cell_certainty ** 2) * (a - b * cell_distance ** 2) if not hg.out_of_bounds(x, y) else HistogramGrid.MAX_CERTAINTY
-                
+
                 # Angle between center of each cell in current layer
                 layer_angle_interval = 360.0 / (layer * 8)
                 cell_buffer_angle = layer_angle_interval
 
-                print "({0:<2}, {1:<2}) {5:>3}/{6:<3} = {2:6.1f} deg (layer {8:4.1f})-- Distance: {3:5.1f} Certainty: {7} Magnitude: {4:.1f}".format(x, y, cell_angle, cell_distance, cell_magnitude, dy, dx, cell_certainty, layer)
+                print "({0:<2}, {1:<2}) {5:>3}/{6:<3} = {2:6.1f} deg (layer {8:4.1f})-- Distance: {3:5.1f} Certainty: {7} Magnitude: {4:.1f}".format(
+                    x, y, cell_angle, cell_distance, cell_magnitude, dy, dx, cell_certainty, layer)
 
                 # VFH+ obstacle enlargement
                 if cell_certainty != HistogramGrid.MAX_CERTAINTY:
                     robot_radius = 1
                     min_obstacle_buffer = 1
                     enlargement_radius = robot_radius + min_obstacle_buffer
-                    enlargement_angle = math.degrees(math.asin(enlargement_radius / cell_distance))
+                    enlargement_angle = math.degrees(
+                        math.asin(enlargement_radius / cell_distance))
                     print "enlargement_angle", enlargement_angle
                     cell_buffer_angle = enlargement_angle
 
-                #for sector_index in xrange(int(math.floor((cell_angle - enlargement_angle) / ph.sector_angle)), \
+                # for sector_index in xrange(int(math.floor((cell_angle - enlargement_angle) / ph.sector_angle)), \
                 #    int(math.ceil((cell_angle + enlargement_angle) / ph.sector_angle))):
                 #print "range btwn %d and %d" % (int(math.floor((cell_angle - cell_buffer_angle) / ph.sector_angle)), int(math.ceil((cell_angle + cell_buffer_angle) / ph.sector_angle)))
 
                 # Loops through all the ph sectors that pass through current cell
-                for sector_index in xrange(int(math.floor((cell_angle - cell_buffer_angle) / ph.sector_angle)), \
-                    int(math.ceil((cell_angle + cell_buffer_angle) / ph.sector_angle) + 1)):
+                for sector_index in xrange(int(math.floor((cell_angle - cell_buffer_angle) / ph.sector_angle)),
+                                           int(math.ceil((cell_angle + cell_buffer_angle) / ph.sector_angle) + 1)):
 
-                    print "   sector:", wrap_angle(wrap(sector_index, ph.polar_histogram) * ph.sector_angle)
+                    print "   sector:", wrap_angle(
+                        wrap(sector_index, ph.polar_histogram) * ph.sector_angle)
                     if layer == 1 and hg.out_of_bounds(x, y):
                         # MAX_CERTAINTY for edge of histogramgrid
-                        ph.polar_histogram[wrap(sector_index, ph.polar_histogram)] += HistogramGrid.MAX_CERTAINTY
+                        ph.polar_histogram[wrap(
+                            sector_index, ph.polar_histogram)] += HistogramGrid.MAX_CERTAINTY
                     else:
-                        ph.polar_histogram[wrap(sector_index, ph.polar_histogram)] += cell_magnitude
+                        ph.polar_histogram[wrap(
+                            sector_index, ph.polar_histogram)] += cell_magnitude
 
                 # Deprecated
                 # sector_index = int(math.floor(cell_angle/ph.sector_angle) if cell_angle >= 0 else math.ceil(cell_angle/ph.sector_angle) - 1)
@@ -275,7 +288,8 @@ class VFH:
         ar_string = ""
         for y in reversed(xrange(hg.get_valid_y(robot_y - window_radius), hg.get_valid_y(robot_y + window_radius + 1))):
             for x in xrange(hg.get_valid_x(robot_x - window_radius), hg.get_valid_x(robot_x + window_radius + 1)):
-                ar_string += "{} ".format(hg.get_certainty(x, y)) if (x, y) != vcp else "X "
+                ar_string += "{} ".format(hg.get_certainty(x, y)
+                                          ) if (x, y) != vcp else "X "
             ar_string += "\n"
         print ar_string[:-1]
 
@@ -286,10 +300,10 @@ class VFH:
         print "Polar Histogram"
         print ph
 
-        ph.avg_obs_dis = sum(obs_dis) / len(obs_dis) if obs_dis and len(obs_dis) != 0 else 0
+        ph.avg_obs_dis = sum(
+            obs_dis) / len(obs_dis) if obs_dis and len(obs_dis) != 0 else 0
 
         return ph
-
 
     @classmethod
     def get_best_direction(cls, ph, target_direction, current_direction, previous_direction, t_low=25, t_high=30, smax=5, a=5, b=1, c=1):
@@ -322,17 +336,18 @@ class VFH:
         # free_sectors = list(filter(lambda s: s[1] < t, enumerate(ph)))
         # free_sectors = list(filter(lambda s: s[1] == 0, enumerate(ph)))
         sector_angle = 360 / len(ph)
-        target_sector = int(target_direction / sector_angle) # Sector target is in
+        # Sector target is in
+        target_sector = int(target_direction / sector_angle)
 
         # print "Free sectors: %d" % len(free_sectors)
         # for tup in free_sectors:
         #     print "Angle: {0:3} deg    Certainty: {1}".format(tup[0] * sector_angle, tup[1])
         # print "Target sector:", target_sector * sector_angle
-        
+
         # print "Time to get the free valleys"
         # free_valleys = []
         # start_angle = free_sectors[0][0] * sector_angle # Start with first free sector
-        
+
         # for i in xrange(len(free_sectors)):
         #     #print "s[%d] a: %d c: %d" % (i, free_sectors[i][0] * sector_angle, free_sectors[i][1])
         #     if i + 1 == len(free_sectors): # If this is the last free sector
@@ -343,20 +358,22 @@ class VFH:
         #             print "Wrapping first valley" # If the first valley begins <360 and ends >0 e.g. 320 -> 20
         #             free_valleys[0] = (start_angle, free_valleys[0][1] + 360)
         #         else:
-        #             print "Putting in last valley" 
+        #             print "Putting in last valley"
         #             free_valleys.append([start_angle, (free_sectors[i][0] + 1) * sector_angle])
-                
+
         #     elif free_sectors[i + 1][0] > free_sectors[i][0] + 1:
         #         print "Gap starting new valley"
         #         free_valleys.append([start_angle, (free_sectors[i][0] + 1) * sector_angle])
         #         start_angle = free_sectors[i + 1][0] * sector_angle
         # print "Candidate valleys:", free_valleys
 
-        valleys = [list(g) for k, g in groupby(list(enumerate(ph)), itemgetter(1))]
+        valleys = [list(g) for k, g in groupby(
+            list(enumerate(ph)), itemgetter(1))]
         print "Valleys", valleys
 
         if valleys[0][0][1] == valleys[-1][0][1]:
-            valleys[-1].extend(map(lambda tup: (tup[0] + len(ph), tup[1]), valleys.pop(0)))
+            valleys[-1].extend(map(lambda tup: (tup[0] +
+                                                len(ph), tup[1]), valleys.pop(0)))
             print "Wrapped last valley"
 
         free_valleys = filter(lambda v: v[0][1] == 0, valleys)
@@ -369,16 +386,23 @@ class VFH:
             if v[-1][0] - v[0][0] > smax:
                 left_candidate = v[0][0] + smax / 2
                 right_candidate = v[-1][0] - smax / 2
-                candidate_angles.append(wrap_angle(left_candidate * sector_angle))
-                candidate_angles.append(wrap_angle(right_candidate * sector_angle))
-                print "Wide Valley (%d, %d)... Adding %d and %d" % (v[0][0], v[-1][0], candidate_angles[-2], candidate_angles[-1])
+                candidate_angles.append(wrap_angle(
+                    left_candidate * sector_angle))
+                candidate_angles.append(wrap_angle(
+                    right_candidate * sector_angle))
+                print "Wide Valley (%d, %d)... Adding %d and %d" % (
+                    v[0][0], v[-1][0], candidate_angles[-2], candidate_angles[-1])
 
                 if left_candidate < target_sector < right_candidate:
-                    print "Target in btwn (%d, %d)... Adding %d" % (left_candidate, right_candidate, target_direction)
+                    print "Target in btwn (%d, %d)... Adding %d" % (
+                        left_candidate, right_candidate, target_direction)
                     candidate_angles.append(target_direction)
             else:
-                candidate_angles.append(wrap_angle(((v[0][0] + v[-1][0]) / 2) * sector_angle)) # Add middle of valley to candidat angles
-                print "Narrow Valley (%d, %d)... Adding %d" % (v[0][0], v[-1][0], candidate_angles[-1])
+                # Add middle of valley to candidat angles
+                candidate_angles.append(wrap_angle(
+                    ((v[0][0] + v[-1][0]) / 2) * sector_angle))
+                print "Narrow Valley (%d, %d)... Adding %d" % (
+                    v[0][0], v[-1][0], candidate_angles[-1])
 
         # Deprecated
         # for v in free_valleys:
@@ -424,10 +448,11 @@ class VFH:
                 #         print "Going clockwise... Adding", candidate_angles[-1]
             # else:
             #     candidate_angles.append(wrap_angle((v[0] + v[1]) / 2)) # Add middle of valley to candidat angles
-            #     print "Narrow Valley (%d, %d)... Adding %d" % (v[0], v[1], candidate_angles[-1]) 
+            #     print "Narrow Valley (%d, %d)... Adding %d" % (v[0], v[1], candidate_angles[-1])
 
         # Early exit
-        if len(candidate_angles) == 1: return candidate_angles[0]
+        if len(candidate_angles) == 1:
+            return candidate_angles[0]
 
         # Grabbed from paper
         if a <= b + c:
@@ -437,24 +462,25 @@ class VFH:
 
         def delta(a1, a2):
             """ Helper function for cost function. Grabbed from paper """
-            #return min(abs(a1 - a2), abs(a1 - a2 - sector_angle), abs(a1 - a2 + sector_angle))
+            # return min(abs(a1 - a2), abs(a1 - a2 - sector_angle), abs(a1 - a2 + sector_angle))
             return small_angle_diff(a1, a2)
 
         print "Calculating costs!"
         costs = []
-        for ca in candidate_angles: # Calculate cost for each candidate angle
+        for ca in candidate_angles:  # Calculate cost for each candidate angle
             # Positive constants:
             # a - goal oriented steering
             # b, c - smooth steering
-            costs.append(a * delta(ca, target_direction) + b * delta(ca, current_direction) + c * delta(ca, previous_direction))
+            costs.append(a * delta(ca, target_direction) + b * delta(ca,
+                                                                     current_direction) + c * delta(ca, previous_direction))
             print "Candidate angle: {0:5.1f}   Cost: {1}".format(ca, costs[-1])
 
         # Target angle is angle with lowest cost
-        target_angle = min(candidate_angles, key=lambda a: costs[candidate_angles.index(a)])
-        print 
+        target_angle = min(
+            candidate_angles, key=lambda a: costs[candidate_angles.index(a)])
+        print
 
         return target_angle
-
 
         # Deprecated
         # target_valley = None
@@ -463,7 +489,7 @@ class VFH:
         #     if v[0] < target_direction < v[1]:
         #         print "Target in btwn (%d, %d) so returning target" % (v[0], v[1])
         #         return target_direction
-            
+
         #     print "valley: (%d, %d) - dif: %d - diffs: (%d, %d)" % (v[0], v[1], diff,  small_angle_diff(v[0], target_direction), small_angle_diff(v[1], target_direction))
         #     if small_angle_diff(v[0], target_direction) < diff:
         #         diff = small_angle_diff(v[0], target_direction)
@@ -472,7 +498,7 @@ class VFH:
         #         diff = small_angle_diff(v[1], target_direction)
         #         target_valley = v
         # print "Target Valley: (%d, %d)" % (target_valley[0], target_valley[1])
-        
+
         # nearest_side = min(target_valley, key=lambda a: small_angle_diff(a, target_direction))
         # print "Nearest side:", nearest_side
         # side = (target_direction - nearest_side + 180) % 360 - 180
@@ -491,9 +517,8 @@ class VFH:
         #     return (target_valley[0] + target_valley[1]) / 2
 
 
-
-
 """ TO BE IMPLEMENTED """
+
 
 class Sensor:
     """ "Abstract Class" for sensors (lidar, sonar...) to implement
@@ -524,8 +549,10 @@ class Bot:
 
     def localize(self, polar):
         angle, distance = polar
-        local_x = int((distance * math.cos(math.radians(angle))) / self.cell_resolution)
-        local_y = int((distance * math.sin(math.radians(angle))) / self.cell_resolution)
+        local_x = int(
+            (distance * math.cos(math.radians(angle))) / self.cell_resolution)
+        local_y = int(
+            (distance * math.sin(math.radians(angle))) / self.cell_resolution)
         return (local_x, local_y)
 
     def localize_readings(self, readings):
@@ -538,5 +565,3 @@ class Bot:
 
     def localize_global_location(glob_loc):
         pass
-
-        
